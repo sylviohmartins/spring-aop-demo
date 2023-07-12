@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="app [local]" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="br.com.sylviomartins.spring.aop.demo.SpringAOPDemoApplication" />
+    <module name="spring-aop-demo" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="br.com.sylviomartins.spring.aop.demo.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
