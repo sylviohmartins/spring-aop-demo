@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Repository;
 
+import java.net.SocketTimeoutException;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,8 +20,8 @@ public class BoletoRepository {
 
     @SneakyThrows
     public Boleto save(final Boleto boleto) {
-        if (!ID.equals(boleto.getId())) {
-            throw new NullPointerException("Só um teste, viu?!");
+        if (true) {
+            throw new SocketTimeoutException("Só um teste, viu?!");
         }
 
         return boleto;
