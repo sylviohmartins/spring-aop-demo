@@ -4,7 +4,6 @@ import br.com.sylviomartins.spring.aop.demo.domain.document.Boleto;
 import br.com.sylviomartins.spring.aop.demo.domain.enumeration.MethodEnum;
 import br.com.sylviomartins.spring.aop.demo.domain.enumeration.StatusEnum;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Repository;
 
 import java.net.SocketTimeoutException;
@@ -18,12 +17,7 @@ public class BoletoRepository {
 
     private final static UUID ID = UUID.fromString("3f1eeb33-8624-41f0-a1c8-0132ae813596");
 
-    @SneakyThrows
-    public Boleto save(final Boleto boleto) {
-        if (true) {
-            throw new SocketTimeoutException("Só um teste, viu?!");
-        }
-
+    public Boleto save(final Boleto boleto) throws SocketTimeoutException {
         return boleto;
     }
 

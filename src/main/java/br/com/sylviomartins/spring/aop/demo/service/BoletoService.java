@@ -1,24 +1,30 @@
 package br.com.sylviomartins.spring.aop.demo.service;
 
 import br.com.sylviomartins.spring.aop.demo.annotation.CustomCounter;
+import br.com.sylviomartins.spring.aop.demo.annotation.Retryable;
 import br.com.sylviomartins.spring.aop.demo.annotation.nested.*;
 import br.com.sylviomartins.spring.aop.demo.domain.document.Boleto;
 import br.com.sylviomartins.spring.aop.demo.domain.enumeration.StatusEnum;
 import br.com.sylviomartins.spring.aop.demo.domain.mapper.BoletoMapper;
 import br.com.sylviomartins.spring.aop.demo.exception.AlreadyExistsException;
+import br.com.sylviomartins.spring.aop.demo.exception.ClientException;
 import br.com.sylviomartins.spring.aop.demo.exception.RecordNotFoundException;
 import br.com.sylviomartins.spring.aop.demo.repository.BoletoRepository;
 import br.com.sylviomartins.spring.aop.demo.util.CustomMethodUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+
 import static br.com.sylviomartins.spring.aop.demo.util.CustomMethodUtils.GET_STATUS_TYPE;
 
 @Service
 @RequiredArgsConstructor
-public class BoletoService extends BaseService {
+public class BoletoService {
 
     private final BoletoRepository boletoRepository;
+
     private final BoletoMapper boletoMapper;
 
     @CustomCounter( //
@@ -45,14 +51,16 @@ public class BoletoService extends BaseService {
                     } //
             ) //
     )
-    public Boleto include(final Boleto boleto) throws AlreadyExistsException {
+    @Retryable(
+            retryFor = {SocketTimeoutException.class, ConnectException.class, ClientException.class}, //
+            maxAttemptsExpression = "${application.retry.max-attempts}", //
+            maxDelayExpression = "${application.retry.max-delay}"//
+    )
+    public Boleto include(final Boleto boleto) throws SocketTimeoutException, AlreadyExistsException {
         boleto.setStatus(StatusEnum.INCLUIDO);
 
         try {
-            return performWithRetry(() -> {
-                Boleto savedBoleto = boletoRepository.save(boleto);
-                return savedBoleto;
-            });
+            return boletoRepository.save(boleto);
 
         } catch (final Exception unknownException) {
             throw new AlreadyExistsException("Já existe um registro com os dados informados.");
@@ -62,16 +70,16 @@ public class BoletoService extends BaseService {
     public Boleto authorize(final Boleto boleto) throws RecordNotFoundException {
         boleto.setStatus(StatusEnum.AUTORIZADO);
 
+        final Boleto persisted = boletoRepository.findById(boleto.getId()).orElseThrow(RecordNotFoundException::new);
+
         try {
-            final Boleto persisted = boletoRepository.findById(boleto.getId()).orElseThrow(RecordNotFoundException::new);
-            return performWithRetry(() -> {
-                boletoMapper.merge(persisted, boleto);
-                Boleto savedBoleto = boletoRepository.save(persisted);
-                return savedBoleto;
-            });
+            boletoMapper.merge(persisted, boleto);
+
+            return boletoRepository.save(persisted);
 
         } catch (final Exception unknownException) {
             throw new RecordNotFoundException();
         }
     }
+
 }
