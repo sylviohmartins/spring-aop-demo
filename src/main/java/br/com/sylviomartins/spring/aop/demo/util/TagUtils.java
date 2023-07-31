@@ -98,14 +98,4 @@ public final class TagUtils {
         return tags;
     }
 
-    /**
-     * Adiciona todas as tags fornecidas à lista de tags personalizadas.
-     *
-     * @param customTags As tags personalizadas.
-     * @param tags       As tags a serem adicionadas.
-     */
-    public static void addAllTags(final List<Tag> customTags, final Tag... tags) {
-        customTags.addAll(Arrays.asList(tags));
-    }
-
 }
