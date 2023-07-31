@@ -1,7 +1,5 @@
 package br.com.sylviomartins.spring.aop.demo.annotation;
 
-import br.com.sylviomartins.spring.aop.demo.annotation.nested.CustomSum;
-import br.com.sylviomartins.spring.aop.demo.annotation.nested.CustomTag;
 import br.com.sylviomartins.spring.aop.demo.annotation.nested.Tag;
 
 import java.lang.annotation.*;
@@ -19,10 +17,8 @@ public @interface CustomCounter {
 
     Tag[] tags() default {};
 
-    Class<?> parentObjectType();
+    Class<?> sourceCustomTags();
 
-    CustomSum customSum();
-
-    CustomTag customTag();
+    String sourceCustomValue();
 
 }

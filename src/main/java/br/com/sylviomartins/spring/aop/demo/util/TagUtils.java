@@ -90,7 +90,7 @@ public final class TagUtils {
         }
 
         final List<Tag> tags = Arrays.stream(arrayTags)
-                .map(tag -> createTag(tag.name(), tag.value()))
+                .map(tag -> createTag(tag.key(), tag.value()))
                 .collect(Collectors.toList());
 
         tags.add(createDefault(joinPoint));

@@ -9,10 +9,8 @@ import lombok.*;
 @AllArgsConstructor
 public class CustomMetric {
 
-    private Class<?> parentObjectType;
+    private Class<?> source;
 
-    private CustomSum customSum;
-
-    private CustomTag customTag;
+    private Class<?> target;
 
 }

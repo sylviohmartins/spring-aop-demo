@@ -2,8 +2,6 @@ package br.com.sylviomartins.spring.aop.demo.domain.document.nested;
 
 import lombok.*;
 
-import java.util.List;
-
 @Getter
 @Setter
 @Builder
@@ -11,8 +9,8 @@ import java.util.List;
 @AllArgsConstructor
 public class CustomTag {
 
-    private String name;
+    private Class<?> source;
 
-    private List<Attribute> attributes;
+    private Class<?> target;
 
 }

@@ -4,16 +4,11 @@ import br.com.sylviomartins.spring.aop.demo.annotation.Counter;
 import br.com.sylviomartins.spring.aop.demo.annotation.CustomCounter;
 import br.com.sylviomartins.spring.aop.demo.annotation.Timer;
 import br.com.sylviomartins.spring.aop.demo.domain.document.Metric;
-import br.com.sylviomartins.spring.aop.demo.domain.document.nested.Attribute;
-import br.com.sylviomartins.spring.aop.demo.domain.document.nested.CustomMetric;
-import br.com.sylviomartins.spring.aop.demo.domain.document.nested.CustomSum;
-import br.com.sylviomartins.spring.aop.demo.domain.document.nested.CustomTag;
 import br.com.sylviomartins.spring.aop.demo.exception.HandlerException;
 import br.com.sylviomartins.spring.aop.demo.exception.ProccedUnknownException;
 import br.com.sylviomartins.spring.aop.demo.handler.CounterMetricHandler;
 import br.com.sylviomartins.spring.aop.demo.handler.CustomCounterMetricHandler;
 import br.com.sylviomartins.spring.aop.demo.handler.TimerMetricHandler;
-import br.com.sylviomartins.spring.aop.demo.util.AttributeUtils;
 import io.micrometer.core.instrument.Tag;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -23,9 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 
+import static br.com.sylviomartins.spring.aop.demo.util.MetricUtils.format;
 import static br.com.sylviomartins.spring.aop.demo.util.TagUtils.retrieveTags;
 
 
@@ -85,6 +80,7 @@ public class MetricAspect {
         }
     }
 
+    @SuppressWarnings("unused")
     @Around("@annotation(customCounter)")
     public Object customCounterAspect(final ProceedingJoinPoint joinPoint, final CustomCounter customCounter) throws ProccedUnknownException {
         if (!customCounter.isEnabled()) {
@@ -93,35 +89,13 @@ public class MetricAspect {
 
         final List<Tag> tags = retrieveTags(joinPoint, customCounter.tags());
 
-        final List<Attribute> sumAttributes = Arrays.stream(customCounter.customSum().attributes()) //
-                .map(AttributeUtils::createAttribute) //
-                .toList();
-
-        final CustomSum customSum = CustomSum.builder() //
-                .attributes(sumAttributes) //
-                .build();
-
-        final List<Attribute> tagAttributes = Arrays.stream(customCounter.customTag().attributes()) //
-                .map(AttributeUtils::createAttribute) //
-                .toList();
-
-        final CustomTag customTag = CustomTag.builder() //
-                .name(customCounter.customTag().name()) //
-                .attributes(tagAttributes) //
-                .build();
-
-        final CustomMetric customMetric = CustomMetric.builder()
-                .parentObjectType(customCounter.parentObjectType()) //
-                .customSum(customSum) //
-                .customTag(customTag) //
-                .build();
-
         final Metric metric = Metric.builder() //
-                .name(customCounter.name()) //
+                .name(format(customCounter.name(), "custom")) //
                 .description(customCounter.description()) //
                 .tags(tags) //
+                .sourceCustomTags(customCounter.sourceCustomTags()) //
                 .value(1.0) //
-                .customMetric(customMetric) //
+                .sourceCustomValue(customCounter.sourceCustomValue()) //
                 .build();
 
         try {

@@ -1,24 +1,21 @@
 package br.com.sylviomartins.spring.aop.demo.handler;
 
+import br.com.sylviomartins.spring.aop.demo.annotation.nested.TagField;
 import br.com.sylviomartins.spring.aop.demo.domain.converter.CustomConverter;
 import br.com.sylviomartins.spring.aop.demo.domain.document.Metric;
-import br.com.sylviomartins.spring.aop.demo.domain.document.nested.Attribute;
-import br.com.sylviomartins.spring.aop.demo.domain.document.nested.CustomMetric;
-import br.com.sylviomartins.spring.aop.demo.domain.document.nested.CustomSum;
-import br.com.sylviomartins.spring.aop.demo.domain.document.nested.CustomTag;
 import io.micrometer.core.instrument.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import static br.com.sylviomartins.spring.aop.demo.util.AttributeUtils.isExecuteMethod;
-import static br.com.sylviomartins.spring.aop.demo.util.MetricUtils.format;
 import static br.com.sylviomartins.spring.aop.demo.util.ReflectionUtils.executeMethod;
 import static br.com.sylviomartins.spring.aop.demo.util.ReflectionUtils.getFieldValue;
 import static br.com.sylviomartins.spring.aop.demo.util.TagUtils.createTag;
-import static java.util.Objects.nonNull;
 
 /**
  * <h1>CounterMetricHandler</h1>
@@ -36,83 +33,66 @@ public class CustomCounterMetricHandler extends BaseMetricHandler {
 
     @Override
     protected void execute(final Object[] args, final Metric metric) {
-        metric.setName(format(metric.getName(), "custom"));
+        final List<Tag> customTags = createCustomTags(args, metric);
+        metric.getTags().addAll(customTags);
 
-        final CustomMetric customMetric = metric.getCustomMetric();
+        sendCustomMetric(metric, metric.getValue(), "count");
 
-        for (final Object result : args) {
-            if (customMetric.getParentObjectType().isInstance(result)) {
-                List<Tag> customTags = createCustomTags(customMetric.getCustomTag(), result);
+        for (Object sourceResult : args) {
+            final Object customValue = convertField(sourceResult, metric.getSourceCustomValue());
 
-                metric.getTags().addAll(customTags);
-
-                List<Object> customSums = createCustomSum(customMetric.getCustomSum(), result);
-
-                customSums.forEach(value -> sendCustomSumMetric(metric, value));
-
-                sendCustomCounterMetric(metric);
-            }
-
+            sendCustomMetric(metric, customValue, "sum");
         }
-
     }
 
-    private List<Tag> createCustomTags(final CustomTag customTag, final Object result) {
+    private List<Tag> createCustomTags(final Object[] args, final Metric metric) {
+        final Class<?> sourceCustomTags = metric.getSourceCustomTags();
+
         final List<Tag> tags = new LinkedList<>();
 
-        for (final Attribute attribute : customTag.getAttributes()) {
-            try {
-                Object fieldValue = getFieldValue(result, attribute);
+        for (Field field : sourceCustomTags.getDeclaredFields()) {
+            field.setAccessible(true);
 
-                Object convertedFieldValue = customConverter.convertToValue(fieldValue, attribute.getObjectType());
+            if (field.isAnnotationPresent(TagField.class)) {
+                final TagField annotation = field.getAnnotation(TagField.class);
 
-                if (nonNull(attribute.getMethod()) && !isExecuteMethod(attribute.getMethod().getTargetClass())) {
-                    convertedFieldValue = executeMethod(attribute.getMethod().getTargetClass(), attribute.getMethod().getName(), result, convertedFieldValue);
+                for (final Object sourceResult : args) {
+                    if (sourceResult.getClass().isAssignableFrom(annotation.clazz())) {
+                        List<Object> convertedFieldValues = Arrays.stream(annotation.fields()) //
+                                .map(attribute -> convertField(sourceResult, attribute)) //
+                                .toList();
+
+                        Object convertedFieldValue = convertedFieldValues.stream() //
+                                .findFirst() //
+                                .orElse(null);
+
+                        if (!isExecuteMethod(annotation.expressionClass())) {
+                            convertedFieldValue = executeMethod(annotation.expressionClass(), annotation.expressionMethod(), sourceResult, convertedFieldValues);
+                        }
+
+                        tags.add(createTag(annotation.key(), String.valueOf(convertedFieldValue)));
+                    }
                 }
-
-                tags.add(createTag(customTag.getName(), convertedFieldValue != null ? convertedFieldValue.toString() : ""));
-
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
             }
         }
 
         return tags;
     }
 
-    private List<Object> createCustomSum(final CustomSum customSum, final Object result) {
-        final List<Object> values = new LinkedList<>();
+    private Object convertField(final Object sourceResult, final String attribute) {
+        try {
+            final Object fieldValue = getFieldValue(sourceResult, attribute);
 
-        for (final Attribute attribute : customSum.getAttributes()) {
-            try {
-                Object fieldValue = getFieldValue(result, attribute);
+            return customConverter.convertToValue(fieldValue, fieldValue.getClass());
 
-                Object convertedFieldValue = customConverter.convertToValue(fieldValue, attribute.getObjectType());
-
-                if (nonNull(attribute.getMethod()) && !isExecuteMethod(attribute.getMethod().getTargetClass())) {
-                    convertedFieldValue = executeMethod(attribute.getMethod().getTargetClass(), attribute.getMethod().getName(), result, convertedFieldValue);
-                }
-
-                values.add(convertedFieldValue);
-
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException("Error converting custom tag field.", e);
         }
-
-        return values;
     }
 
-    private void sendCustomSumMetric(final Metric metric, Object value) {
+    private void sendCustomMetric(final Metric metric, final Object value, final String objective) {
         metric.setValue(value);
-        metric.setObjective("sum");
-
-        sendCounter(metric);
-    }
-
-    private void sendCustomCounterMetric(final Metric metric) {
-        metric.setValue(metric.getValue());
-        metric.setObjective("counter");
+        metric.setObjective(objective);
 
         sendCounter(metric);
     }

@@ -14,18 +14,10 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface Tag {
 
-    /**
-     * Retorna o nome da tag.
-     *
-     * @return o nome da tag
-     */
-    String name();
+    String key();
 
-    /**
-     * Retorna o valor da tag.
-     *
-     * @return o valor da tag
-     */
     String value();
+
+
 
 }

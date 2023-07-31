@@ -1,6 +1,5 @@
 package br.com.sylviomartins.spring.aop.demo.domain.document;
 
-import br.com.sylviomartins.spring.aop.demo.domain.document.nested.CustomMetric;
 import io.micrometer.core.instrument.Tag;
 import lombok.*;
 
@@ -22,8 +21,10 @@ public class Metric {
 
     private Object value;
 
+    private String sourceCustomValue;
+
     private String objective;
 
-    private CustomMetric customMetric;
+    private Class<?> sourceCustomTags;
 
 }
