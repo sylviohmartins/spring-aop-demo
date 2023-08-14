@@ -16,18 +16,20 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 import static br.com.sylviomartins.spring.aop.demo.util.MetricUtils.format;
 import static br.com.sylviomartins.spring.aop.demo.util.TagUtils.retrieveTags;
 
 
 /**
- * <h1>MetricAspect</h1>
- * <p>Classe que representa um aspecto para lidar com métricas.</p>
- * <p>Ela intercepta métodos anotados com as anotações @Counter ou @Timer e processa as métricas correspondentes.</p>
+ * A classe <code>MetricAspect</code> representa um aspecto para lidar com métricas.
+ * Ela intercepta métodos anotados com as anotações {@link Counter}, {@link CustomCounter} ou {@link Timer}
+ * e processa as métricas correspondentes.
  *
  * <p><strong>@since</strong> 19 de junho de 2023</p>
  * <p><strong>@author</strong> Sylvio Humberto Martins</p>
@@ -40,6 +42,9 @@ public class MetricAspect {
 
     private static final String ERROR_MESSAGE = "Erro desconhecido ao processar a métrica: {}";
 
+    @Value("#{${application.metrics.enabled}}")
+    private Map<String, Boolean> enabledKeys;
+
     private final CounterMetricHandler counterMetricHandler;
 
     private final CustomCounterMetricHandler customCounterMetricHandler;
@@ -47,17 +52,17 @@ public class MetricAspect {
     private final TimerMetricHandler timerMetricHandler;
 
     /**
-     * Intercepta métodos anotados com @Counter e processa a métrica de contador.
+     * Intercepta métodos anotados com {@link Counter} e processa a métrica de contador.
      *
      * @param joinPoint O ponto de junção em execução que representa o método interceptado.
-     * @param counter   A anotação Counter aplicada ao método.
+     * @param counter   A anotação {@link Counter} aplicada ao método.
      * @return O resultado do método interceptado.
      * @throws ProccedUnknownException Se ocorrer uma exceção durante a interceptação.
      */
     @SuppressWarnings("unused")
     @Around("@annotation(counter)")
     public Object counterAspect(final ProceedingJoinPoint joinPoint, final Counter counter) throws ProccedUnknownException {
-        if (!counter.isEnabled()) {
+        if (!isEnabled(counter.enabledKey())) {
             return handleDisabledMetric(counter.name());
         }
 
@@ -80,10 +85,18 @@ public class MetricAspect {
         }
     }
 
+    /**
+     * Intercepta métodos anotados com {@link CustomCounter} e processa a métrica de contador personalizado.
+     *
+     * @param joinPoint     O ponto de junção em execução que representa o método interceptado.
+     * @param customCounter A anotação {@link CustomCounter} aplicada ao método.
+     * @return O resultado do método interceptado.
+     * @throws ProccedUnknownException Se ocorrer uma exceção durante a interceptação.
+     */
     @SuppressWarnings("unused")
     @Around("@annotation(customCounter)")
     public Object customCounterAspect(final ProceedingJoinPoint joinPoint, final CustomCounter customCounter) throws ProccedUnknownException {
-        if (!customCounter.isEnabled()) {
+        if (!isEnabled(customCounter.enabledKey())) {
             return handleDisabledMetric(customCounter.name());
         }
 
@@ -109,17 +122,17 @@ public class MetricAspect {
     }
 
     /**
-     * Intercepta métodos anotados com @Timer e processa a métrica de temporizador.
+     * Intercepta métodos anotados com {@link Timer} e processa a métrica de temporizador.
      *
      * @param joinPoint O ponto de junção em execução que representa o método interceptado.
-     * @param timer     A anotação Timer aplicada ao método.
+     * @param timer     A anotação {@link Timer} aplicada ao método.
      * @return O resultado do método interceptado.
      * @throws ProccedUnknownException Se ocorrer uma exceção durante a interceptação.
      */
     @SuppressWarnings("unused")
     @Around("@annotation(timer)")
     public Object timerAspect(final ProceedingJoinPoint joinPoint, final Timer timer) throws ProccedUnknownException {
-        if (!timer.isEnabled()) {
+        if (!isEnabled(timer.enabledKey())) {
             return handleDisabledMetric(timer.name());
         }
 
@@ -142,11 +155,21 @@ public class MetricAspect {
     }
 
     /**
+     * Verifica se uma métrica personalizada está habilitada com base na chave fornecida.
+     *
+     * @param enabledKey A chave que indica se a métrica está habilitada.
+     * @return {@code true} se a métrica estiver habilitada, {@code false} caso contrário.
+     */
+    private boolean isEnabled(final String enabledKey) {
+        return enabledKeys.getOrDefault(enabledKey, false);
+    }
+
+    /**
      * Lida com o caso em que uma métrica está desabilitada.
      * Este método registra uma mensagem indicando que a métrica está desabilitada.
      *
      * @param metricName O nome da métrica desabilitada.
-     * @return null
+     * @return {@code null}
      */
     private Object handleDisabledMetric(final String metricName) {
         LOGGER.info("O registro da métrica '{}' está desabilitado", metricName);

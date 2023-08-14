@@ -31,6 +31,13 @@ public class CustomCounterMetricHandler extends BaseMetricHandler {
 
     private final CustomConverter customConverter;
 
+    /**
+     * Implementação do método abstrato {@link BaseMetricHandler#execute(Object[], Metric)}.
+     * Este método é chamado para executar a ação de medição e registro das métricas personalizadas do tipo contador.
+     *
+     * @param args   Os argumentos do método interceptado.
+     * @param metric A métrica a ser registrada.
+     */
     @Override
     protected void execute(final Object[] args, final Metric metric) {
         final List<Tag> customTags = createCustomTags(args, metric);
@@ -45,6 +52,13 @@ public class CustomCounterMetricHandler extends BaseMetricHandler {
         }
     }
 
+    /**
+     * Cria tags personalizadas com base nas anotações {@link TagField} presentes na classe da métrica.
+     *
+     * @param args   Os argumentos do método interceptado.
+     * @param metric A métrica para a qual as tags personalizadas estão sendo criadas.
+     * @return A lista de tags personalizadas.
+     */
     private List<Tag> createCustomTags(final Object[] args, final Metric metric) {
         final Class<?> sourceCustomTags = metric.getSourceCustomTags();
 
@@ -79,6 +93,13 @@ public class CustomCounterMetricHandler extends BaseMetricHandler {
         return tags;
     }
 
+    /**
+     * Converte o valor de um campo da classe da métrica para o formato apropriado.
+     *
+     * @param sourceResult O objeto do qual o valor do campo está sendo extraído.
+     * @param attribute    O nome do campo.
+     * @return O valor convertido do campo.
+     */
     private Object convertField(final Object sourceResult, final String attribute) {
         try {
             final Object fieldValue = getFieldValue(sourceResult, attribute);
@@ -90,6 +111,13 @@ public class CustomCounterMetricHandler extends BaseMetricHandler {
         }
     }
 
+    /**
+     * Envia a métrica personalizada com o valor apropriado.
+     *
+     * @param metric    A métrica a ser enviada.
+     * @param value     O valor a ser registrado na métrica.
+     * @param objective O objetivo da métrica (por exemplo, "count" ou "sum").
+     */
     private void sendCustomMetric(final Metric metric, final Object value, final String objective) {
         metric.setValue(value);
         metric.setObjective(objective);

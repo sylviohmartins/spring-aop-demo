@@ -12,10 +12,8 @@ import java.util.stream.Collectors;
 
 import static br.com.sylviomartins.spring.aop.demo.util.MetricUtils.format;
 
-
 /**
- * <h1>TagUtils</h1>
- * <p>Esta classe fornece utilitários para criação e manipulação de tags.</p>
+ * A classe <code>TagUtils</code> fornece utilitários para criação e manipulação de tags.
  *
  * <p><strong>@since</strong> 19 de junho de 2023</p>
  * <p><strong>@author</strong> Sylvio Humberto Martins</p>
@@ -78,11 +76,11 @@ public final class TagUtils {
     }
 
     /**
-     * Recupera as arrayTags com base nos valores fornecidos.
+     * Recupera as tags com base nos valores fornecidos.
      *
      * @param joinPoint O ponto de corte da execução do método.
-     * @param arrayTags As arrayTags fornecidas.
-     * @return A lista de arrayTags.
+     * @param arrayTags As tags fornecidas.
+     * @return A lista de tags.
      */
     public static List<Tag> retrieveTags(final ProceedingJoinPoint joinPoint, final br.com.sylviomartins.spring.aop.demo.annotation.nested.Tag[] arrayTags) {
         if (arrayTags == null) {

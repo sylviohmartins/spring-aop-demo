@@ -8,8 +8,4 @@ public final class MetricConstants {
 
     public static final String INCLUSAO = "inclusao";
 
-    public static final String AUTORIZACAO = "autorizacao";
-
-    public static final String EFETIVACAO = "efetivacao";
-
 }

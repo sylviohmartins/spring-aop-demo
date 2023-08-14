@@ -5,9 +5,8 @@ import br.com.sylviomartins.spring.aop.demo.annotation.nested.Tag;
 import java.lang.annotation.*;
 
 /**
- * <h1>Counter</h1>
- * <p>Esta anotação é usada para marcar um método com informações de métricas de contador.</p>
- * <p>Pode ser aplicada apenas a métodos.</p>
+ * A anotação <code>Counter</code> é usada para marcar um método com informações de métricas de contador.
+ * Pode ser aplicada apenas a métodos.
  *
  * <p>
  * A anotação pode ser usada para ativar ou desativar o registro da métrica, fornecer um nome
@@ -23,30 +22,30 @@ import java.lang.annotation.*;
 public @interface Counter {
 
     /**
-     * Indica se o registro da métrica está ativado ou desativado.
+     * Obtém a chave de habilitação para a métrica personalizada.
      *
-     * @return true se o registro da métrica estiver ativado, false caso contrário.
+     * @return A chave de habilitação.
      */
-    boolean isEnabled() default true;
+    String enabledKey();
 
     /**
      * Obtém o nome da métrica.
      *
-     * @return o nome da métrica.
+     * @return O nome da métrica.
      */
     String name();
 
     /**
      * Obtém a descrição da métrica.
      *
-     * @return a descrição da métrica.
+     * @return A descrição da métrica.
      */
     String description() default "";
 
     /**
      * Obtém as tags associadas à métrica.
      *
-     * @return as tags associadas à métrica.
+     * @return As tags associadas à métrica.
      */
     Tag[] tags() default {};
 

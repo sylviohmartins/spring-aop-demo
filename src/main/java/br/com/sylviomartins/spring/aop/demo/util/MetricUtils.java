@@ -4,8 +4,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 /**
- * <h1>MetricUtils</h1>
- * <p>Esta classe fornece utilitários para manipulação de métricas.</p>
+ * A classe <code>MetricUtils</code> fornece utilitários para manipulação de métricas.
  *
  * <p><strong>@since</strong> 19 de junho de 2023</p>
  * <p><strong>@author</strong> Sylvio Humberto Martins</p>
